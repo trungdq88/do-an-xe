@@ -322,13 +322,13 @@ var orderFood = function () {var _ref9 = (0, _asyncToGenerator3.default)( /*#__P
               sendMessageToUser(
               user.id,
               params.channel.id,
-              'Rất tiếc bạn đã xài hết coupon tháng này. :pensive:'));case 17:return _context7.abrupt('return',
+              ':x: Rất tiếc bạn đã xài hết coupon tháng này. :pensive:'));case 17:return _context7.abrupt('return',
 
             '');case 20:if (!(
             remaining < foodCount)) {_context7.next = 24;break;}_context7.next = 23;return (
               sendMessageToUser(
               user.id,
-              params.channel.id, 'Th\xE1ng n\xE0y b\u1EA1n ch\u1EC9 c\xF2n `' +
+              params.channel.id, ':x: Th\xE1ng n\xE0y b\u1EA1n ch\u1EC9 c\xF2n `' +
               remaining + '` coupon, kh\xF4ng \u0111\u1EE7 \u0111\u1EC3 \u0111\u1EB7t `' + foodCount + '` ph\u1EA7n :scream:'));case 23:return _context7.abrupt('return',
 
             '');case 24:

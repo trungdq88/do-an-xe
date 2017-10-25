@@ -322,14 +322,14 @@ const orderFood = async params => {
     await sendMessageToUser(
       user.id,
       params.channel.id,
-      'Rất tiếc bạn đã xài hết coupon tháng này. :pensive:',
+      ':x: Rất tiếc bạn đã xài hết coupon tháng này. :pensive:',
     );
     return '';
   } else if (remaining < foodCount) {
     await sendMessageToUser(
       user.id,
       params.channel.id,
-      `Tháng này bạn chỉ còn \`${remaining}\` coupon, không đủ để đặt \`${foodCount}\` phần :scream:`,
+      `:x: Tháng này bạn chỉ còn \`${remaining}\` coupon, không đủ để đặt \`${foodCount}\` phần :scream:`,
     );
     return '';
   }
