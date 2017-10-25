@@ -322,7 +322,7 @@ const orderFood = async params => {
     await sendMessageToUser(
       user.id,
       params.channel.id,
-      'Hết coupon tháng này mất rồi sao mà đặt được? :pensive:',
+      'Rất tiếc bạn đã xài hết coupon tháng này. :pensive:',
     );
     return '';
   } else if (remaining < foodCount) {
@@ -347,7 +347,6 @@ const orderFood = async params => {
   /*     count: order.fields['Số phần ăn'], */
   /*   })), */
   /* ); */
-  console.log('Done');
 
   console.log('params', params);
   return await createOrder(
@@ -378,7 +377,8 @@ app.post('/order', async (req, res) => {
 
   console.log('callback_id', params.callback_id);
   if (params.callback_id.indexOf('order_food_') === 0) {
-    res.send(await orderFood(params));
+    orderFood(params);
+    res.send(':loading: Đang thực hiện...');
   } else if (params.callback_id.indexOf('set_up_username_') === 0) {
     res.send(await setUpUsernameAndOrder(params));
   }
@@ -389,7 +389,8 @@ app.post('/list', async (req, res) => {
     res.send('No.');
     return;
   }
-  res.send(await checkMenu(req.body));
+  checkMenu(req.body);
+  res.send(':loading: Đang thực hiện...');
 });
 
 app.get('/hello', async (req, res) => {
