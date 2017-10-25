@@ -1,11 +1,18 @@
+const morgan = require('morgan');
 const fetch = require('node-fetch');
-const functions = require('firebase-functions');
 const app = require('express')();
+
+const bodyParser = require('body-parser');
+
+app.use(morgan('combined'));
+if (process.argv[2] === 'dev') {
+  app.use(bodyParser.urlencoded({ extended: false }));
+}
 
 const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 const SLACK_INCOMING_HOOK =
-  'https://hooks.slack.com/services/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';
+  'https://hooks.slack.com/services/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';
 const SLACK_APP_TOKEN =
   'xoxp-2171822291-11431073668-253307635457-638389f99372c7659cc7d329223e2cb0';
 
@@ -84,51 +91,79 @@ const checkMenu = async () => {
   return await postToSlack(todayFood.records);
 };
 
-/* const orderFood = async () => { */
-/*             user = params.user; */
-/*             action = params.actions.length ? params.actions[0] : null; */
-/*             console.log('params', params);_context3.next = 5;return ( */
-/*  */
-/*               fetch( */
-/*               'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + ('?api_key=' + */
-/*               AIRTABLE_API_KEY)). */
-/*               then(function (r) {return r.json();}));case 5:listStaff = _context3.sent; */
-/*  */
-/*             airTableUser = listStaff.records.filter( */
-/*             function (staff) {return staff.fields['Slack User ID'] === user.id;})[ */
-/*             0];if ( */
-/*             airTableUser) {_context3.next = 13;break;}_context3.next = 10;return ( */
-/*               selectUserFullName(params, res, listStaff));case 10:return _context3.abrupt('return', _context3.sent);case 13:_context3.next = 15;return ( */
-/*               fetch( */
-/*               'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Order?' + ('api_key=' + */
-/*               AIRTABLE_API_KEY + '&') + 'filterByFormula=IS_SAME(CREATED_TIME(), TODAY(), \'day\')'). */
-/*  */
-/*               then(function (r) {return r.json();}));case 15:orderList = _context3.sent; */
-/*  */
-/*             console.log( */
-/*             'orderList', */
-/*             orderList.records.map(function (order) {return { */
-/*                 staffId: order.fields['Tên nhân viên'], */
-/*                 count: order.fields['Số phần ăn'] };})); */
-/*  */
-/*  */
-/*  */
-/*             return 'done'; */
-/* }; */
-/*  */
+const orderFood = async params => {
+  const user = params.user;
+  const action = params.actions.length ? params.actions[0] : null;
+
+  const listStaff = await fetch(
+    'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' +
+      ('?api_key=' + AIRTABLE_API_KEY),
+  ).then(r => r.json());
+
+  const airTableUser = listStaff.records.filter(
+    staff => staff.fields['Slack User ID'] === user.id,
+  )[0];
+
+  if (!airTableUser) {
+    return 'selectUserFullName(params, res, listStaff)';
+  }
+
+  /* const orderList = await fetch( */
+  /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Order?' + */
+  /*     ('api_key=' + AIRTABLE_API_KEY + '&') + */
+  /*     "filterByFormula=IS_SAME(CREATED_TIME(), TODAY(), 'day')", */
+  /* ).then(r => r.json()); */
+  /*  */
+  /* console.log( */
+  /*   'orderList', */
+  /*   orderList.records.map(order => ({ */
+  /*     staffId: order.fields['Tên nhân viên'], */
+  /*     count: order.fields['Số phần ăn'], */
+  /*   })), */
+  /* ); */
+  console.log('Done');
+
+  return '';
+};
 
 app.get('/', (req, res) => {
-  res.send(`Root page 123`);
+  res.send(`Go home, you are drunk`);
 });
 
-app.get('/test-post-to-slack', async (req, res) => {
+app.post('/test-post-to-slack', async (req, res) => {
   res.send(await checkMenu());
 });
 
-app.get('/hello/:name', (req, res) => {
-  res.send(`Hello ${req.params.name}`);
+app.post('/order', async (req, res) => {
+  const params = JSON.parse(req.body.payload);
+
+  if (!params.token || params.token !== SLACK_TOKEN) {
+    res.send('No.');
+    return;
+  }
+
+  if (params.callback_id.indexOf('order_food_') === 0) {
+    res.send(await orderFood(params));
+  } else if (params.callback_id === 'set_up_username') {
+    res.send(await setUpUsername(params, res));
+  }
 });
 
-// We name this function "route", which you can see is
-// still surfaced in the HTTP URLs below.
-exports.route = functions.https.onRequest(app);
+app.post('/list', async (req, res) => {
+  if (!req.body.token || req.body.token !== SLACK_TOKEN) {
+    res.send('No.');
+    return;
+  }
+  res.send(await checkMenu());
+});
+
+app.get('/hello', async (req, res) => {
+  res.send('hello from expressjs.');
+});
+
+if (process.argv[2] === 'dev') {
+  app.listen(8010, function() {
+    console.log('Example app listening on port 8010.');
+  });
+}
+exports.doanxe = app;
