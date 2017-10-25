@@ -96,10 +96,10 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
 
 
 
-            'Đã đăng menu lên channel :)');case 3:case 'end':return _context.stop();}}}, _callee, undefined);}));return function postToSlack(_x) {return _ref.apply(this, arguments);};}();
+            '');case 3:case 'end':return _context.stop();}}}, _callee, undefined);}));return function postToSlack(_x) {return _ref.apply(this, arguments);};}();
 
 
-var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2(params) {var findUser, todayFood;return _regenerator2.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2(params) {var findUser, _todayFood;return _regenerator2.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
             console.log('checkmenu', params);_context2.next = 3;return (
 
               new Promise(function (resolve, reject) {return (
@@ -116,11 +116,17 @@ var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__P
                   }));}));case 3:findUser = _context2.sent;if (!(
 
 
-            !findUser.length || findUser[0].fields.Admin !== true)) {_context2.next = 6;break;}return _context2.abrupt('return',
-            'Chỉ có admin dễ thương mới được xài lệnh này :)');case 6:
+            !findUser.length || findUser[0].fields.Admin !== true)) {_context2.next = 8;break;}_context2.next = 7;return (
+              sendMessageToUser(
+              params.user_id,
+              params.channel_id,
+              'Chỉ có admin dễ thương mới được xài lệnh này :)'));case 7:return _context2.abrupt('return');case 8:
 
 
-            console.log('List menu by', findUser[0]);_context2.next = 9;return (
+
+
+            console.log('List menu by', findUser[0]);_context2.prev = 9;_context2.next = 12;return (
+
 
               new Promise(function (resolve, reject) {return (
                   airTableApi('Menu').
@@ -133,10 +139,17 @@ var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__P
                       return;
                     }
                     resolve(records);
-                  }));}));case 9:todayFood = _context2.sent;_context2.next = 12;return (
+                  }));}));case 12:_todayFood = _context2.sent;_context2.next = 19;break;case 15:_context2.prev = 15;_context2.t0 = _context2['catch'](9);_context2.next = 19;return (
 
 
-              postToSlack(todayFood));case 12:return _context2.abrupt('return', _context2.sent);case 13:case 'end':return _context2.stop();}}}, _callee2, undefined);}));return function checkMenu(_x2) {return _ref4.apply(this, arguments);};}();
+              sendMessageToUser(
+              params.user_id,
+              params.channel_id, 'C\xF3 l\u1ED7i x\u1EA3y ra. ' + _context2.t0));case 19:_context2.next = 21;return (
+
+
+
+
+              postToSlack(todayFood));case 21:return _context2.abrupt('return', _context2.sent);case 22:case 'end':return _context2.stop();}}}, _callee2, undefined, [[9, 15]]);}));return function checkMenu(_x2) {return _ref4.apply(this, arguments);};}();
 
 
 var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3(params, listStaff) {var action, foodCount, foodId, form, response;return _regenerator2.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
@@ -175,16 +188,16 @@ var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default
             form.append('trigger_id', params.trigger_id);_context3.next = 9;return (
               fetchJson('https://slack.com/api/dialog.open', {
                 method: 'post',
-                body: form }));case 9:response = _context3.sent;if (
+                body: form }));case 9:response = _context3.sent;
 
-            response.ok) {_context3.next = 13;break;}_context3.next = 13;return (
+            console.log('Send dialog:', response);if (
+            response.ok) {_context3.next = 14;break;}_context3.next = 14;return (
               sendMessageToUser(
               params.user.id,
               params.channel.id, 'H\u1EC7 th\u1ED1ng b\u1ECB l\u1ED7i. Vui l\xF2ng th\u1EED l\u1EA1i sau. (' +
-              response.error + ')'));case 13:
+              response.error + ')'));case 14:return _context3.abrupt('return',
 
 
-            console.log('Send dialog:', response);return _context3.abrupt('return',
             '');case 15:case 'end':return _context3.stop();}}}, _callee3, undefined);}));return function selectUserFullName(_x3, _x4) {return _ref5.apply(this, arguments);};}();
 
 

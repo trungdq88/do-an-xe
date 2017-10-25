@@ -96,7 +96,7 @@ const postToSlack = async foods => {
         ]),
     }),
   });
-  return 'Đã đăng menu lên channel :)';
+  return '';
 };
 
 const checkMenu = async params => {
@@ -117,24 +117,37 @@ const checkMenu = async params => {
   );
 
   if (!findUser.length || findUser[0].fields.Admin !== true) {
-    return 'Chỉ có admin dễ thương mới được xài lệnh này :)';
+    await sendMessageToUser(
+      params.user_id,
+      params.channel_id,
+      'Chỉ có admin dễ thương mới được xài lệnh này :)',
+    );
+    return;
   }
 
   console.log('List menu by', findUser[0]);
 
-  const todayFood = await new Promise((resolve, reject) =>
-    airTableApi('Menu')
-      .select({
-        filterByFormula: '{Món hôm nay}',
-      })
-      .firstPage((err, records) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(records);
-      }),
-  );
+  try {
+    const todayFood = await new Promise((resolve, reject) =>
+      airTableApi('Menu')
+        .select({
+          filterByFormula: '{Món hôm nay}',
+        })
+        .firstPage((err, records) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(records);
+        }),
+    );
+  } catch (e) {
+    await sendMessageToUser(
+      params.user_id,
+      params.channel_id,
+      `Có lỗi xảy ra. ${e}`,
+    );
+  }
 
   return await postToSlack(todayFood);
 };
@@ -177,6 +190,7 @@ const selectUserFullName = async (params, listStaff) => {
     method: 'post',
     body: form,
   });
+  console.log('Send dialog:', response);
   if (!response.ok) {
     await sendMessageToUser(
       params.user.id,
@@ -184,7 +198,6 @@ const selectUserFullName = async (params, listStaff) => {
       `Hệ thống bị lỗi. Vui lòng thử lại sau. (${response.error})`,
     );
   }
-  console.log('Send dialog:', response);
   return '';
 };
 
