@@ -377,8 +377,7 @@ app.post('/order', async (req, res) => {
 
   console.log('callback_id', params.callback_id);
   if (params.callback_id.indexOf('order_food_') === 0) {
-    orderFood(params);
-    res.send(':loading: Đang thực hiện...');
+    res.send(await orderFood(params));
   } else if (params.callback_id.indexOf('set_up_username_') === 0) {
     res.send(await setUpUsernameAndOrder(params));
   }
@@ -389,8 +388,7 @@ app.post('/list', async (req, res) => {
     res.send('No.');
     return;
   }
-  checkMenu(req.body);
-  res.send(':loading: Đang thực hiện...');
+  res.send(await checkMenu(req.body));
 });
 
 app.get('/hello', async (req, res) => {
