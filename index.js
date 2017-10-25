@@ -376,11 +376,16 @@ app.post('/order', function () {var _ref11 = (0, _asyncToGenerator3.default)( /*
 
 
             console.log('callback_id', params.callback_id);if (!(
-            params.callback_id.indexOf('order_food_') === 0)) {_context9.next = 10;break;}
-            orderFood(params);
-            res.send('');_context9.next = 16;break;case 10:if (!(
-            params.callback_id.indexOf('set_up_username_') === 0)) {_context9.next = 16;break;}_context9.t0 =
-            res;_context9.next = 14;return setUpUsernameAndOrder(params);case 14:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);case 16:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x18, _x19) {return _ref11.apply(this, arguments);};}());
+            params.callback_id.indexOf('order_food_') === 0)) {_context9.next = 12;break;}
+            orderFood(params);_context9.next = 9;return (
+              sendMessageToUser(
+              params.user.id,
+              params.channel.id,
+              'Đang đặt món, chờ xíu nha...'));case 9:
+
+            res.send('');_context9.next = 18;break;case 12:if (!(
+            params.callback_id.indexOf('set_up_username_') === 0)) {_context9.next = 18;break;}_context9.t0 =
+            res;_context9.next = 16;return setUpUsernameAndOrder(params);case 16:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);case 18:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x18, _x19) {return _ref11.apply(this, arguments);};}());
 
 
 
@@ -390,7 +395,7 @@ app.post('/list', function () {var _ref12 = (0, _asyncToGenerator3.default)( /*#
 
 
             checkMenu(req.body);
-            res.send('Đang đăng tin');case 5:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x20, _x21) {return _ref12.apply(this, arguments);};}());
+            res.send('Đang đăng tin, chờ xíu nha...');case 5:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x20, _x21) {return _ref12.apply(this, arguments);};}());
 
 
 app.get('/hello', function () {var _ref13 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee11(req, res) {return _regenerator2.default.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:

@@ -378,6 +378,11 @@ app.post('/order', async (req, res) => {
   console.log('callback_id', params.callback_id);
   if (params.callback_id.indexOf('order_food_') === 0) {
     orderFood(params);
+    await sendMessageToUser(
+      params.user.id,
+      params.channel.id,
+      'Đang đặt món, chờ xíu nha...',
+    );
     res.send('');
   } else if (params.callback_id.indexOf('set_up_username_') === 0) {
     res.send(await setUpUsernameAndOrder(params));
@@ -390,7 +395,7 @@ app.post('/list', async (req, res) => {
     return;
   }
   checkMenu(req.body);
-  res.send('Đang đăng tin');
+  res.send('Đang đăng tin, chờ xíu nha...');
 });
 
 app.get('/hello', async (req, res) => {
