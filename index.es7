@@ -13,13 +13,19 @@ if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
-const fetchJson = (...args) => {
+const fetchLog = (...args) => {
   console.log('>>> Request: ', args);
   return fetch(...args).then(r => {
-    console.log('>>> Response: ', args);
-    return r.json();
+    console.log('>>> Response: ', r);
+    return r;
   });
 };
+
+const fetchJson = (...args) =>
+  fetchLog(...args).then(r => r.json()).then(json => {
+    console.log('>>> Response JSON: ', json);
+    return json;
+  });
 
 const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
@@ -32,7 +38,7 @@ const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
 );
 
 const postToSlack = async foods => {
-  await fetchJson(SLACK_INCOMING_HOOK, {
+  await fetchLog(SLACK_INCOMING_HOOK, {
     method: 'POST',
     body: JSON.stringify({
       text:

@@ -13,13 +13,19 @@ if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
-var fetchJson = function fetchJson() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+var fetchLog = function fetchLog() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
   console.log('>>> Request: ', args);
   return fetch.apply(undefined, args).then(function (r) {
-    console.log('>>> Response: ', args);
-    return r.json();
+    console.log('>>> Response: ', r);
+    return r;
   });
 };
+
+var fetchJson = function fetchJson() {return (
+    fetchLog.apply(undefined, arguments).then(function (r) {return r.json();}).then(function (json) {
+      console.log('>>> Response JSON: ', json);
+      return json;
+    }));};
 
 var SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 var AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
@@ -32,7 +38,7 @@ var airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
 
 
 var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(foods) {return _regenerator2.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
-              fetchJson(SLACK_INCOMING_HOOK, {
+              fetchLog(SLACK_INCOMING_HOOK, {
                 method: 'POST',
                 body: JSON.stringify({
                   text:
