@@ -13,6 +13,14 @@ if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
+var fetchJson = function fetchJson() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+  console.log('>>> Request: ', args);
+  return fetch.apply(undefined, args).then(function (r) {
+    console.log('>>> Response: ', args);
+    return r.json();
+  });
+};
+
 var SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 var AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 var SLACK_INCOMING_HOOK =
@@ -24,7 +32,7 @@ var airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
 
 
 var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(foods) {return _regenerator2.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
-              fetch(SLACK_INCOMING_HOOK, {
+              fetchJson(SLACK_INCOMING_HOOK, {
                 method: 'POST',
                 body: JSON.stringify({
                   text:
@@ -165,10 +173,10 @@ var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default
 
 
             form.append('trigger_id', params.trigger_id);_context3.next = 9;return (
-              fetch('https://slack.com/api/dialog.open', {
+              fetchJson('https://slack.com/api/dialog.open', {
                 method: 'post',
-                body: form }).
-              then(function (r) {return r.json();}));case 9:response = _context3.sent;if (
+                body: form }));case 9:response = _context3.sent;if (
+
             response.ok) {_context3.next = 13;break;}_context3.next = 13;return (
               sendMessageToUser(
               params.user.id,
@@ -186,10 +194,10 @@ var sendMessageToUser = function () {var _ref6 = (0, _asyncToGenerator3.default)
             form.append('channel', channelId);
             form.append('text', msg);
             form.append('user', slackUserId);_context4.next = 7;return (
-              fetch('https://slack.com/api/chat.postEphemeral', {
+              fetchJson('https://slack.com/api/chat.postEphemeral', {
                 method: 'post',
-                body: form }).
-              then(function (r) {return r.json();}));case 7:return _context4.abrupt('return', _context4.sent);case 8:case 'end':return _context4.stop();}}}, _callee4, undefined);}));return function sendMessageToUser(_x5, _x6, _x7) {return _ref6.apply(this, arguments);};}();
+                body: form }));case 7:return _context4.abrupt('return', _context4.sent);case 8:case 'end':return _context4.stop();}}}, _callee4, undefined);}));return function sendMessageToUser(_x5, _x6, _x7) {return _ref6.apply(this, arguments);};}();
+
 
 
 var createOrder = function () {var _ref7 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee5(
@@ -295,11 +303,6 @@ var orderFood = function () {var _ref9 = (0, _asyncToGenerator3.default)( /*#__P
 
             console.log('action', action);
 
-            /* const listStaff = await fetch( */
-            /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + */
-            /*     ('?api_key=' + AIRTABLE_API_KEY), */
-            /* ).then(r => r.json()); */
-
             // We have to get ALL staff, because if current user is not mapped, we need
             // the list to display to user and ask them to choose
             _context7.next = 7;return new Promise(function (resolve, reject) {return (
@@ -318,51 +321,40 @@ var orderFood = function () {var _ref9 = (0, _asyncToGenerator3.default)( /*#__P
             function (staff) {return staff.fields['Slack User ID'] === user.id;})[
             0];
 
-            console.log('order by', airTableUser);if (
+            console.log('order by', user.id);if (
 
-            airTableUser) {_context7.next = 13;break;}return _context7.abrupt('return',
-            selectUserFullName(params, listStaff));case 13:
+            airTableUser) {_context7.next = 14;break;}
+            console.log('AirTable staff mapping for ' +
+            user.id + ' not found, sending dialog.');return _context7.abrupt('return',
+
+            selectUserFullName(params, listStaff));case 14:
 
 
             remaining = Number(airTableUser.fields['Số coupon còn lại*']);if (!(
-            remaining <= 0)) {_context7.next = 20;break;}_context7.next = 17;return (
+            remaining <= 0)) {_context7.next = 21;break;}_context7.next = 18;return (
               sendMessageToUser(
               user.id,
               params.channel.id,
-              ':x: Rất tiếc bạn đã xài hết coupon tháng này. :pensive:'));case 17:return _context7.abrupt('return',
+              ':x: Rất tiếc bạn đã xài hết coupon tháng này. :pensive:'));case 18:return _context7.abrupt('return',
 
-            '');case 20:if (!(
-            remaining < foodCount)) {_context7.next = 24;break;}_context7.next = 23;return (
+            '');case 21:if (!(
+            remaining < foodCount)) {_context7.next = 25;break;}_context7.next = 24;return (
               sendMessageToUser(
               user.id,
               params.channel.id, ':x: Th\xE1ng n\xE0y b\u1EA1n ch\u1EC9 c\xF2n `' +
-              remaining + '` coupon, kh\xF4ng \u0111\u1EE7 \u0111\u1EC3 \u0111\u1EB7t `' + foodCount + '` ph\u1EA7n :scream:'));case 23:return _context7.abrupt('return',
+              remaining + '` coupon, kh\xF4ng \u0111\u1EE7 \u0111\u1EC3 \u0111\u1EB7t `' + foodCount + '` ph\u1EA7n :scream:'));case 24:return _context7.abrupt('return',
 
-            '');case 24:
+            '');case 25:
 
 
-            /* const orderList = await fetch( */
-            /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Order?' + */
-            /*     ('api_key=' + AIRTABLE_API_KEY + '&') + */
-            /*     "filterByFormula=IS_SAME(CREATED_TIME(), TODAY(), 'day')", */
-            /* ).then(r => r.json()); */
-            /*  */
-            /* console.log( */
-            /*   'orderList', */
-            /*   orderList.records.map(order => ({ */
-            /*     staffId: order.fields['Tên nhân viên'], */
-            /*     count: order.fields['Số phần ăn'], */
-            /*   })), */
-            /* ); */
-
-            console.log('params', params);_context7.next = 27;return (
+            console.log('params', params);_context7.next = 28;return (
               createOrder(
               params.channel.id,
               user.id,
               airTableUser.id,
               foodCount,
               foodId,
-              remaining));case 27:return _context7.abrupt('return', _context7.sent);case 28:case 'end':return _context7.stop();}}}, _callee7, undefined);}));return function orderFood(_x15) {return _ref9.apply(this, arguments);};}();
+              remaining));case 28:return _context7.abrupt('return', _context7.sent);case 29:case 'end':return _context7.stop();}}}, _callee7, undefined);}));return function orderFood(_x15) {return _ref9.apply(this, arguments);};}();
 
 
 

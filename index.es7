@@ -13,6 +13,14 @@ if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
+const fetchJson = (...args) => {
+  console.log('>>> Request: ', args);
+  return fetch(...args).then(r => {
+    console.log('>>> Response: ', args);
+    return r.json();
+  });
+};
+
 const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 const SLACK_INCOMING_HOOK =
@@ -24,7 +32,7 @@ const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
 );
 
 const postToSlack = async foods => {
-  await fetch(SLACK_INCOMING_HOOK, {
+  await fetchJson(SLACK_INCOMING_HOOK, {
     method: 'POST',
     body: JSON.stringify({
       text:
@@ -165,10 +173,10 @@ const selectUserFullName = async (params, listStaff) => {
     }),
   );
   form.append('trigger_id', params.trigger_id);
-  const response = await fetch('https://slack.com/api/dialog.open', {
+  const response = await fetchJson('https://slack.com/api/dialog.open', {
     method: 'post',
     body: form,
-  }).then(r => r.json());
+  });
   if (!response.ok) {
     await sendMessageToUser(
       params.user.id,
@@ -186,10 +194,10 @@ const sendMessageToUser = async (slackUserId, channelId, msg) => {
   form.append('channel', channelId);
   form.append('text', msg);
   form.append('user', slackUserId);
-  return await fetch('https://slack.com/api/chat.postEphemeral', {
+  return await fetchJson('https://slack.com/api/chat.postEphemeral', {
     method: 'post',
     body: form,
-  }).then(r => r.json());
+  });
 };
 
 const createOrder = async (
@@ -295,11 +303,6 @@ const orderFood = async params => {
 
   console.log('action', action);
 
-  /* const listStaff = await fetch( */
-  /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + */
-  /*     ('?api_key=' + AIRTABLE_API_KEY), */
-  /* ).then(r => r.json()); */
-
   // We have to get ALL staff, because if current user is not mapped, we need
   // the list to display to user and ask them to choose
   const listStaff = await new Promise((resolve, reject) =>
@@ -318,9 +321,12 @@ const orderFood = async params => {
     staff => staff.fields['Slack User ID'] === user.id,
   )[0];
 
-  console.log('order by', airTableUser);
+  console.log('order by', user.id);
 
   if (!airTableUser) {
+    console.log(
+      `AirTable staff mapping for ${user.id} not found, sending dialog.`,
+    );
     return selectUserFullName(params, listStaff);
   }
 
@@ -340,20 +346,6 @@ const orderFood = async params => {
     );
     return '';
   }
-
-  /* const orderList = await fetch( */
-  /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Order?' + */
-  /*     ('api_key=' + AIRTABLE_API_KEY + '&') + */
-  /*     "filterByFormula=IS_SAME(CREATED_TIME(), TODAY(), 'day')", */
-  /* ).then(r => r.json()); */
-  /*  */
-  /* console.log( */
-  /*   'orderList', */
-  /*   orderList.records.map(order => ({ */
-  /*     staffId: order.fields['Tên nhân viên'], */
-  /*     count: order.fields['Số phần ăn'], */
-  /*   })), */
-  /* ); */
 
   console.log('params', params);
   return await createOrder(
