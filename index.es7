@@ -141,6 +141,7 @@ const checkMenu = async params => {
           resolve(records);
         }),
     );
+    return await postToSlack(todayFood);
   } catch (e) {
     await sendMessageToUser(
       params.user_id,
@@ -148,8 +149,6 @@ const checkMenu = async params => {
       `Có lỗi xảy ra. ${e}`,
     );
   }
-
-  return await postToSlack(todayFood);
 };
 
 const selectUserFullName = async (params, listStaff) => {

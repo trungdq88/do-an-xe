@@ -99,7 +99,7 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
             '');case 3:case 'end':return _context.stop();}}}, _callee, undefined);}));return function postToSlack(_x) {return _ref.apply(this, arguments);};}();
 
 
-var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2(params) {var findUser, _todayFood;return _regenerator2.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2(params) {var findUser, todayFood;return _regenerator2.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
             console.log('checkmenu', params);_context2.next = 3;return (
 
               new Promise(function (resolve, reject) {return (
@@ -139,17 +139,16 @@ var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__P
                       return;
                     }
                     resolve(records);
-                  }));}));case 12:_todayFood = _context2.sent;_context2.next = 19;break;case 15:_context2.prev = 15;_context2.t0 = _context2['catch'](9);_context2.next = 19;return (
+                  }));}));case 12:todayFood = _context2.sent;_context2.next = 15;return (
 
+              postToSlack(todayFood));case 15:return _context2.abrupt('return', _context2.sent);case 18:_context2.prev = 18;_context2.t0 = _context2['catch'](9);_context2.next = 22;return (
 
               sendMessageToUser(
               params.user_id,
-              params.channel_id, 'C\xF3 l\u1ED7i x\u1EA3y ra. ' + _context2.t0));case 19:_context2.next = 21;return (
+              params.channel_id, 'C\xF3 l\u1ED7i x\u1EA3y ra. ' + _context2.t0));case 22:case 'end':return _context2.stop();}}}, _callee2, undefined, [[9, 18]]);}));return function checkMenu(_x2) {return _ref4.apply(this, arguments);};}();
 
 
 
-
-              postToSlack(todayFood));case 21:return _context2.abrupt('return', _context2.sent);case 22:case 'end':return _context2.stop();}}}, _callee2, undefined, [[9, 15]]);}));return function checkMenu(_x2) {return _ref4.apply(this, arguments);};}();
 
 
 var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3(params, listStaff) {var action, foodCount, foodId, form, response;return _regenerator2.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
