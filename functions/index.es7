@@ -6,8 +6,10 @@ const Airtable = require('airtable');
 
 const bodyParser = require('body-parser');
 
+const isDevelopment = process.argv[2] === 'dev';
+
 app.use(morgan('combined'));
-if (process.argv[2] === 'dev') {
+if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
@@ -394,7 +396,7 @@ app.get('/hello', async (req, res) => {
   res.send('hello from expressjs.');
 });
 
-if (process.argv[2] === 'dev') {
+if (isDevelopment) {
   app.listen(8010, function() {
     console.log('Example app listening on port 8010.');
   });

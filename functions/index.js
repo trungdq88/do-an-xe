@@ -6,8 +6,10 @@ var Airtable = require('airtable');
 
 var bodyParser = require('body-parser');
 
+var isDevelopment = process.argv[2] === 'dev';
+
 app.use(morgan('combined'));
-if (process.argv[2] === 'dev') {
+if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
 
@@ -394,7 +396,7 @@ app.get('/hello', function () {var _ref13 = (0, _asyncToGenerator3.default)( /*#
             res.send('hello from expressjs.');case 1:case 'end':return _context11.stop();}}}, _callee11, undefined);}));return function (_x22, _x23) {return _ref13.apply(this, arguments);};}());
 
 
-if (process.argv[2] === 'dev') {
+if (isDevelopment) {
   app.listen(8010, function () {
     console.log('Example app listening on port 8010.');
   });
