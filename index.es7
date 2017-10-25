@@ -16,7 +16,7 @@ if (isDevelopment) {
 const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 const SLACK_INCOMING_HOOK =
-  'https://hooks.slack.com/services/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';
+  'https://hooks.slack.com/services/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';
 const SLACK_APP_TOKEN = 'xoxb-254761642838-Ta2VbGf2N3vUvGYNl4salNEy';
 
 const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
