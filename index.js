@@ -168,9 +168,16 @@ var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default
               fetch('https://slack.com/api/dialog.open', {
                 method: 'post',
                 body: form }).
-              then(function (r) {return r.json();}));case 9:response = _context3.sent;
+              then(function (r) {return r.json();}));case 9:response = _context3.sent;if (
+            response.ok) {_context3.next = 13;break;}_context3.next = 13;return (
+              sendMessageToUser(
+              params.user.id,
+              params.channel.id, 'H\u1EC7 th\u1ED1ng b\u1ECB l\u1ED7i. Vui l\xF2ng th\u1EED l\u1EA1i sau. (' +
+              response.error + ')'));case 13:
+
+
             console.log('Send dialog:', response);return _context3.abrupt('return',
-            '');case 12:case 'end':return _context3.stop();}}}, _callee3, undefined);}));return function selectUserFullName(_x3, _x4) {return _ref5.apply(this, arguments);};}();
+            '');case 15:case 'end':return _context3.stop();}}}, _callee3, undefined);}));return function selectUserFullName(_x3, _x4) {return _ref5.apply(this, arguments);};}();
 
 
 var sendMessageToUser = function () {var _ref6 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4(slackUserId, channelId, msg) {var form;return _regenerator2.default.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:

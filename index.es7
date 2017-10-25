@@ -169,6 +169,13 @@ const selectUserFullName = async (params, listStaff) => {
     method: 'post',
     body: form,
   }).then(r => r.json());
+  if (!response.ok) {
+    await sendMessageToUser(
+      params.user.id,
+      params.channel.id,
+      `Hệ thống bị lỗi. Vui lòng thử lại sau. (${response.error})`,
+    );
+  }
   console.log('Send dialog:', response);
   return '';
 };
