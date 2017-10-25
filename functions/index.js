@@ -2,6 +2,7 @@
 var fetch = require('node-fetch');
 var app = require('express')();
 var FormData = require('form-data');
+var Airtable = require('airtable');
 
 var bodyParser = require('body-parser');
 
@@ -14,8 +15,11 @@ var SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
 var AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 var SLACK_INCOMING_HOOK =
 'https://hooks.slack.com/services/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';
-var SLACK_APP_TOKEN =
-'xoxp-2171822291-11431073668-260975407857-c8d63e4f45eb3787f574d1cdc891d905';
+var SLACK_APP_TOKEN = 'xoxb-254761642838-Ta2VbGf2N3vUvGYNl4salNEy';
+
+var airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
+'appkhdzUXxa4FWcih');
+
 
 var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(foods) {return _regenerator2.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
               fetch(SLACK_INCOMING_HOOK, {
@@ -29,7 +33,8 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
                   'Thanks.',
                   attachments: foods.
                   map(function (_ref2) {var fields = _ref2.fields,id = _ref2.id;return {
-                      text: '*' + fields['Tên món'] + ' (Mã số `' + fields['ID'] + '`)*',
+                      parse: 'full',
+                      text: fields['Tên món'] + ' (Mã số ' + fields['ID'] + ')',
                       fallback: 'Bạn không thể đặt món',
                       callback_id: 'order_food_' + id,
                       attachment_type: 'default',
@@ -41,7 +46,7 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
                       actions: [
                       {
                         name: 'order_food_' + id,
-                        text: 'Đặt món',
+                        text: 'Đặt ' + fields['Tên món'],
                         type: 'select',
                         options: [
                         1,
@@ -74,7 +79,7 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
                   concat([
                   {
                     text:
-                    '*Đặt giùm* hoặc *đặt nhiều phần*, mọi người vào link này ' +
+                    'Đặt giùm hoặc đặt nhiều phần, mọi người vào link này ' +
                     'nha: http://bit.ly/air-lounge-order-form :grin:' }]) }) }));case 2:return _context.abrupt('return',
 
 
@@ -84,24 +89,34 @@ var postToSlack = function () {var _ref = (0, _asyncToGenerator3.default)( /*#__
 
 
 var checkMenu = function () {var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2() {var todayFood;return _regenerator2.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
-              fetch(
-              'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Menu?' + (
-              'api_key=' + AIRTABLE_API_KEY + '&filterByFormula={Món hôm nay}')).
-              then(function (r) {return r.json();}));case 2:todayFood = _context2.sent;_context2.next = 5;return (
+              new Promise(function (resolve, reject) {return (
+                  airTableApi('Menu').
+                  select({
+                    filterByFormula: '{Món hôm nay}' }).
 
-              postToSlack(todayFood.records));case 5:return _context2.abrupt('return', _context2.sent);case 6:case 'end':return _context2.stop();}}}, _callee2, undefined);}));return function checkMenu() {return _ref4.apply(this, arguments);};}();
+                  firstPage(function (err, records) {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+                    resolve(records);
+                  }));}));case 2:todayFood = _context2.sent;_context2.next = 5;return (
 
 
-var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3(params, listStaff) {var action, foodCount, form, response;return _regenerator2.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+              postToSlack(todayFood));case 5:return _context2.abrupt('return', _context2.sent);case 6:case 'end':return _context2.stop();}}}, _callee2, undefined);}));return function checkMenu() {return _ref4.apply(this, arguments);};}();
+
+
+var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3(params, listStaff) {var action, foodCount, foodId, form, response;return _regenerator2.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
             action = params.actions.length ? params.actions[0] : null;
             foodCount = action.selected_options[0].value;
+            foodId = params.callback_id.replace(/order_food_/, '');
             // Open dialog
             form = new FormData();
             form.append('token', SLACK_APP_TOKEN);
             form.append(
             'dialog',
             JSON.stringify({
-              callback_id: 'set_up_username',
+              callback_id: 'set_up_username_' + foodId,
               title: 'Đặt món lần đầu',
               elements: [
               {
@@ -110,7 +125,7 @@ var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default
                 type: 'select',
                 name: 'airtable_staff_id',
                 value: '',
-                options: listStaff.records.map(function (staff) {return {
+                options: listStaff.map(function (staff) {return {
                     label: staff.fields['Họ tên'],
                     value: staff.id };}) },
 
@@ -124,74 +139,142 @@ var selectUserFullName = function () {var _ref5 = (0, _asyncToGenerator3.default
 
 
 
-            form.append('trigger_id', params.trigger_id);_context3.next = 8;return (
+            form.append('trigger_id', params.trigger_id);_context3.next = 9;return (
               fetch('https://slack.com/api/dialog.open', {
                 method: 'post',
                 body: form }).
-              then(function (r) {return r.json();}));case 8:response = _context3.sent;
+              then(function (r) {return r.json();}));case 9:response = _context3.sent;
             console.log('Send dialog:', response);return _context3.abrupt('return',
-            '');case 11:case 'end':return _context3.stop();}}}, _callee3, undefined);}));return function selectUserFullName(_x2, _x3) {return _ref5.apply(this, arguments);};}();
+            '');case 12:case 'end':return _context3.stop();}}}, _callee3, undefined);}));return function selectUserFullName(_x2, _x3) {return _ref5.apply(this, arguments);};}();
 
 
-var createOrder = function () {var _ref6 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4(airTableStaffId, foodCount) {return _regenerator2.default.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
-            console.log('createOrder', airTableStaffId, foodCount);return _context4.abrupt('return',
-            '');case 2:case 'end':return _context4.stop();}}}, _callee4, undefined);}));return function createOrder(_x4, _x5) {return _ref6.apply(this, arguments);};}();
+var createOrder = function () {var _ref6 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4(
+  channelId,
+  slackUserId,
+  airTableStaffId,
+  foodCount,
+  foodId) {var msg, createOrderResponse, form, response;return _regenerator2.default.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
+
+            console.log('createOrder', {
+              channelId: channelId,
+              slackUserId: slackUserId,
+              airTableStaffId: airTableStaffId,
+              foodCount: foodCount,
+              foodId: foodId });
 
 
-var setUpUsernameAndOrder = function () {var _ref7 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee5(params) {var airtableResponse;return _regenerator2.default.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:if (
-            params.submission.airtable_staff_id) {_context5.next = 2;break;}return _context5.abrupt('return',
+            msg = ':white_check_mark: B\u1EA1n \u0111\xE3 \u0111\u1EB7t th\xE0nh c\xF4ng `' + foodCount + '` m\xF3n!';_context4.prev = 2;_context4.next = 5;return (
+
+
+              new Promise(function (resolve, reject) {return (
+                  airTableApi('Order').create(
+                  {
+                    'Tên nhân viên': [airTableStaffId],
+                    'Món ăn ID': [foodId],
+                    'Số phần ăn': Number(foodCount) },
+
+                  function (err, record) {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+                    resolve(record);
+                  }));}));case 5:createOrderResponse = _context4.sent;
+
+
+            console.log('createOrderResponse', createOrderResponse);_context4.next = 12;break;case 9:_context4.prev = 9;_context4.t0 = _context4['catch'](2);
+
+            msg = ':x: C\xF3 l\u1ED7i x\u1EA3y ra, vui l\xF2ng th\u1EED l\u1EA1i. (' + _context4.t0 + ')';case 12:
+
+
+            form = new FormData();
+            form.append('token', SLACK_APP_TOKEN);
+            form.append('channel', channelId);
+            form.append('text', msg);
+            form.append('user', slackUserId);_context4.next = 19;return (
+              fetch('https://slack.com/api/chat.postEphemeral', {
+                method: 'post',
+                body: form }).
+              then(function (r) {return r.json();}));case 19:response = _context4.sent;
+
+            console.log('Send success msg: ', response);return _context4.abrupt('return',
+
+            '');case 22:case 'end':return _context4.stop();}}}, _callee4, undefined, [[2, 9]]);}));return function createOrder(_x4, _x5, _x6, _x7, _x8) {return _ref6.apply(this, arguments);};}();
+
+
+var setUpUsernameAndOrder = function () {var _ref7 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee5(params) {var foodId, airtableResponse;return _regenerator2.default.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+            foodId = params.callback_id.replace(/set_up_username_/, '');if (
+
+            params.submission.airtable_staff_id) {_context5.next = 3;break;}return _context5.abrupt('return',
             {
               errors: [
               {
                 name: 'airtable_staff_id',
-                error: 'Bạn cần phải chọn tên để đặt món!' }] });case 2:_context5.next = 4;return (
+                error: 'Bạn cần phải chọn tên để đặt món!' }] });case 3:_context5.next = 5;return (
 
 
 
 
 
-              fetch(
-              'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff/' + (
-              '' + params.submission.airtable_staff_id),
-              {
-                method: 'patch',
-                headers: {
-                  'Content-type': 'application/json',
-                  Authorization: 'Bearer ' + AIRTABLE_API_KEY },
+              new Promise(function (resolve, reject) {return (
+                  airTableApi('Staff').update(
+                  params.submission.airtable_staff_id,
+                  {
+                    'Slack User ID': params.user.id },
+
+                  function (err, record) {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+                    resolve(record);
+                  }));}));case 5:airtableResponse = _context5.sent;
 
 
-                body: JSON.stringify({
-                  fields: {
-                    'Slack User ID': params.user.id } }) }).
 
-
-
-              then(function (r) {return r.json();}));case 4:airtableResponse = _context5.sent;_context5.next = 7;return (
-
+            console.log('params', params);_context5.next = 9;return (
               createOrder(
+              params.channel.id,
+              params.user.id,
               params.submission.airtable_staff_id,
-              params.submission.food_count));case 7:return _context5.abrupt('return', _context5.sent);case 8:case 'end':return _context5.stop();}}}, _callee5, undefined);}));return function setUpUsernameAndOrder(_x6) {return _ref7.apply(this, arguments);};}();
+              params.submission.food_count,
+              foodId));case 9:return _context5.abrupt('return', _context5.sent);case 10:case 'end':return _context5.stop();}}}, _callee5, undefined);}));return function setUpUsernameAndOrder(_x9) {return _ref7.apply(this, arguments);};}();
 
 
 
-var orderFood = function () {var _ref8 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee6(params) {var user, action, foodCount, listStaff, airTableUser;return _regenerator2.default.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+var orderFood = function () {var _ref8 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee6(params) {var user, action, foodCount, foodId, listStaff, airTableUser;return _regenerator2.default.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
             user = params.user;
             action = params.actions.length ? params.actions[0] : null;
             foodCount = action.selected_options[0].value;
+            foodId = params.callback_id.replace(/order_food_/, '');
 
-            console.log('action', action);_context6.next = 6;return (
+            console.log('action', action);
 
-              fetch(
-              'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + (
-              '?api_key=' + AIRTABLE_API_KEY)).
-              then(function (r) {return r.json();}));case 6:listStaff = _context6.sent;
+            /* const listStaff = await fetch( */
+            /*   'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + */
+            /*     ('?api_key=' + AIRTABLE_API_KEY), */
+            /* ).then(r => r.json()); */
 
-            airTableUser = listStaff.records.filter(
+            // We have to get ALL staff, because if current user is not mapped, we need
+            // the list to display to user and ask them to choose
+            _context6.next = 7;return new Promise(function (resolve, reject) {return (
+                airTableApi('Staff').select().firstPage(function (err, records) {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  resolve(records);
+                }));});case 7:listStaff = _context6.sent;
+
+
+            console.log('listStaff length', listStaff.length);
+
+            airTableUser = listStaff.filter(
             function (staff) {return staff.fields['Slack User ID'] === user.id;})[
             0];if (
 
-            airTableUser) {_context6.next = 10;break;}return _context6.abrupt('return',
-            selectUserFullName(params, listStaff));case 10:
+            airTableUser) {_context6.next = 12;break;}return _context6.abrupt('return',
+            selectUserFullName(params, listStaff));case 12:
 
 
             /* const orderList = await fetch( */
@@ -207,9 +290,16 @@ var orderFood = function () {var _ref8 = (0, _asyncToGenerator3.default)( /*#__P
             /*     count: order.fields['Số phần ăn'], */
             /*   })), */
             /* ); */
-            console.log('Done');_context6.next = 13;return (
+            console.log('Done');
 
-              createOrder(airTableUser.id, foodCount));case 13:return _context6.abrupt('return', _context6.sent);case 14:case 'end':return _context6.stop();}}}, _callee6, undefined);}));return function orderFood(_x7) {return _ref8.apply(this, arguments);};}();
+            console.log('params', params);_context6.next = 16;return (
+              createOrder(
+              params.channel.id,
+              user.id,
+              airTableUser.id,
+              foodCount,
+              foodId));case 16:return _context6.abrupt('return', _context6.sent);case 17:case 'end':return _context6.stop();}}}, _callee6, undefined);}));return function orderFood(_x10) {return _ref8.apply(this, arguments);};}();
+
 
 
 app.get('/', function (req, res) {
@@ -217,7 +307,7 @@ app.get('/', function (req, res) {
 });
 
 app.post('/test-post-to-slack', function () {var _ref9 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee7(req, res) {return _regenerator2.default.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:_context7.t0 =
-            res;_context7.next = 3;return checkMenu();case 3:_context7.t1 = _context7.sent;_context7.t0.send.call(_context7.t0, _context7.t1);case 5:case 'end':return _context7.stop();}}}, _callee7, undefined);}));return function (_x8, _x9) {return _ref9.apply(this, arguments);};}());
+            res;_context7.next = 3;return checkMenu();case 3:_context7.t1 = _context7.sent;_context7.t0.send.call(_context7.t0, _context7.t1);case 5:case 'end':return _context7.stop();}}}, _callee7, undefined);}));return function (_x11, _x12) {return _ref9.apply(this, arguments);};}());
 
 
 app.post('/order', function () {var _ref10 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee8(req, res) {var params;return _regenerator2.default.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
@@ -231,8 +321,8 @@ app.post('/order', function () {var _ref10 = (0, _asyncToGenerator3.default)( /*
             console.log('callback_id', params.callback_id);if (!(
             params.callback_id.indexOf('order_food_') === 0)) {_context8.next = 13;break;}_context8.t0 =
             res;_context8.next = 9;return orderFood(params);case 9:_context8.t1 = _context8.sent;_context8.t0.send.call(_context8.t0, _context8.t1);_context8.next = 19;break;case 13:if (!(
-            params.callback_id === 'set_up_username')) {_context8.next = 19;break;}_context8.t2 =
-            res;_context8.next = 17;return setUpUsernameAndOrder(params);case 17:_context8.t3 = _context8.sent;_context8.t2.send.call(_context8.t2, _context8.t3);case 19:case 'end':return _context8.stop();}}}, _callee8, undefined);}));return function (_x10, _x11) {return _ref10.apply(this, arguments);};}());
+            params.callback_id.indexOf('set_up_username_') === 0)) {_context8.next = 19;break;}_context8.t2 =
+            res;_context8.next = 17;return setUpUsernameAndOrder(params);case 17:_context8.t3 = _context8.sent;_context8.t2.send.call(_context8.t2, _context8.t3);case 19:case 'end':return _context8.stop();}}}, _callee8, undefined);}));return function (_x13, _x14) {return _ref10.apply(this, arguments);};}());
 
 
 
@@ -241,11 +331,11 @@ app.post('/list', function () {var _ref11 = (0, _asyncToGenerator3.default)( /*#
             res.send('No.');return _context9.abrupt('return');case 3:_context9.t0 =
 
 
-            res;_context9.next = 6;return checkMenu();case 6:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);case 8:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x12, _x13) {return _ref11.apply(this, arguments);};}());
+            res;_context9.next = 6;return checkMenu();case 6:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);case 8:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x15, _x16) {return _ref11.apply(this, arguments);};}());
 
 
 app.get('/hello', function () {var _ref12 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee10(req, res) {return _regenerator2.default.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:
-            res.send('hello from expressjs.');case 1:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x14, _x15) {return _ref12.apply(this, arguments);};}());
+            res.send('hello from expressjs.');case 1:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x17, _x18) {return _ref12.apply(this, arguments);};}());
 
 
 if (process.argv[2] === 'dev') {
