@@ -1,6 +1,7 @@
 const morgan = require('morgan');
 const fetch = require('node-fetch');
 const app = require('express')();
+const FormData = require('form-data');
 
 const bodyParser = require('body-parser');
 
@@ -14,7 +15,7 @@ const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
 const SLACK_INCOMING_HOOK =
   'https://hooks.slack.com/services/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';
 const SLACK_APP_TOKEN =
-  'xoxp-2171822291-11431073668-253307635457-638389f99372c7659cc7d329223e2cb0';
+  'xoxp-2171822291-11431073668-260975407857-c8d63e4f45eb3787f574d1cdc891d905';
 
 const postToSlack = async foods => {
   await fetch(SLACK_INCOMING_HOOK, {
@@ -91,9 +92,94 @@ const checkMenu = async () => {
   return await postToSlack(todayFood.records);
 };
 
+const selectUserFullName = async (params, listStaff) => {
+  const action = params.actions.length ? params.actions[0] : null;
+  const foodCount = action.selected_options[0].value;
+  // Open dialog
+  const form = new FormData();
+  form.append('token', SLACK_APP_TOKEN);
+  form.append(
+    'dialog',
+    JSON.stringify({
+      callback_id: 'set_up_username',
+      title: 'Đặt món lần đầu',
+      elements: [
+        {
+          label: 'Chọn tên của bạn',
+          placeholder: '(Chỉ cần cài đặt trong lần đặt món đầu tiên)',
+          type: 'select',
+          name: 'airtable_staff_id',
+          value: '',
+          options: listStaff.records.map(staff => ({
+            label: staff.fields['Họ tên'],
+            value: staff.id,
+          })),
+        },
+        {
+          label: 'Số lượng',
+          type: 'text',
+          name: 'food_count',
+          value: foodCount,
+        },
+      ],
+    }),
+  );
+  form.append('trigger_id', params.trigger_id);
+  const response = await fetch('https://slack.com/api/dialog.open', {
+    method: 'post',
+    body: form,
+  }).then(r => r.json());
+  console.log('Send dialog:', response);
+  return '';
+};
+
+const createOrder = async (airTableStaffId, foodCount) => {
+  console.log('createOrder', airTableStaffId, foodCount);
+  return ''; // Return empty string to keep the original msg
+};
+
+const setUpUsernameAndOrder = async params => {
+  if (!params.submission.airtable_staff_id) {
+    return {
+      errors: [
+        {
+          name: 'airtable_staff_id',
+          error: 'Bạn cần phải chọn tên để đặt món!',
+        },
+      ],
+    };
+  }
+
+  const airtableResponse = await fetch(
+    'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff/' +
+      ('' + params.submission.airtable_staff_id),
+    {
+      method: 'patch',
+      headers: {
+        'Content-type': 'application/json',
+        Authorization: 'Bearer ' + AIRTABLE_API_KEY,
+      },
+
+      body: JSON.stringify({
+        fields: {
+          'Slack User ID': params.user.id,
+        },
+      }),
+    },
+  ).then(r => r.json());
+
+  return await createOrder(
+    params.submission.airtable_staff_id,
+    params.submission.food_count,
+  );
+};
+
 const orderFood = async params => {
   const user = params.user;
   const action = params.actions.length ? params.actions[0] : null;
+  const foodCount = action.selected_options[0].value;
+
+  console.log('action', action);
 
   const listStaff = await fetch(
     'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' +
@@ -105,7 +191,7 @@ const orderFood = async params => {
   )[0];
 
   if (!airTableUser) {
-    return 'selectUserFullName(params, res, listStaff)';
+    return selectUserFullName(params, listStaff);
   }
 
   /* const orderList = await fetch( */
@@ -123,7 +209,7 @@ const orderFood = async params => {
   /* ); */
   console.log('Done');
 
-  return '';
+  return await createOrder(airTableUser.id, foodCount);
 };
 
 app.get('/', (req, res) => {
@@ -142,10 +228,11 @@ app.post('/order', async (req, res) => {
     return;
   }
 
+  console.log('callback_id', params.callback_id);
   if (params.callback_id.indexOf('order_food_') === 0) {
     res.send(await orderFood(params));
   } else if (params.callback_id === 'set_up_username') {
-    res.send(await setUpUsername(params, res));
+    res.send(await setUpUsernameAndOrder(params));
   }
 });
 
