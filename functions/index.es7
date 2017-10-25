@@ -1,0 +1,134 @@
+const fetch = require('node-fetch');
+const functions = require('firebase-functions');
+const app = require('express')();
+
+const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
+const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
+const SLACK_INCOMING_HOOK =
+  'https://hooks.slack.com/services/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';
+const SLACK_APP_TOKEN =
+  'xoxp-2171822291-11431073668-253307635457-638389f99372c7659cc7d329223e2cb0';
+
+const postToSlack = async foods => {
+  await fetch(SLACK_INCOMING_HOOK, {
+    method: 'POST',
+    body: JSON.stringify({
+      text:
+        '<!channel> Hi mọi người, thức ăn xế hôm nay có những món sau đây. ' +
+        'Mọi người nhanh tay submit đặt món nhé. :alarm_clock: Em chốt order ' +
+        'lúc *11:20am* hen! Sau giờ này, đường link sẽ bị disabled, các bạn ' +
+        'sẽ không đặt thêm được nữa nên mọi người tranh thủ nha :smile: ' +
+        'Thanks.',
+      attachments: foods
+        .map(({ fields, id }) => ({
+          text: '*' + fields['Tên món'] + ' (Mã số `' + fields['ID'] + '`)*',
+          fallback: 'Bạn không thể đặt món',
+          callback_id: 'order_food_' + id,
+          attachment_type: 'default',
+          image_url: fields['Hình ảnh']
+            ? (fields['Hình ảnh'].filter(
+                ({ type }) => type === 'image/jpeg',
+              )[0] || {}).url || ''
+            : '',
+          actions: [
+            {
+              name: 'order_food_' + id,
+              text: 'Đặt món',
+              type: 'select',
+              options: [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+              ].map(i => ({
+                text: 'Đặt ' + i + ' phần',
+                value: i,
+              })),
+            },
+          ],
+        }))
+        .concat([
+          {
+            text:
+              '*Đặt giùm* hoặc *đặt nhiều phần*, mọi người vào link này ' +
+              'nha: http://bit.ly/air-lounge-order-form :grin:',
+          },
+        ]),
+    }),
+  });
+  return 'Đã đăng menu lên channel :)';
+};
+
+const checkMenu = async () => {
+  const todayFood = await fetch(
+    'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Menu?' +
+      ('api_key=' + AIRTABLE_API_KEY + '&filterByFormula={Món hôm nay}'),
+  ).then(r => r.json());
+
+  return await postToSlack(todayFood.records);
+};
+
+/* const orderFood = async () => { */
+/*             user = params.user; */
+/*             action = params.actions.length ? params.actions[0] : null; */
+/*             console.log('params', params);_context3.next = 5;return ( */
+/*  */
+/*               fetch( */
+/*               'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Staff' + ('?api_key=' + */
+/*               AIRTABLE_API_KEY)). */
+/*               then(function (r) {return r.json();}));case 5:listStaff = _context3.sent; */
+/*  */
+/*             airTableUser = listStaff.records.filter( */
+/*             function (staff) {return staff.fields['Slack User ID'] === user.id;})[ */
+/*             0];if ( */
+/*             airTableUser) {_context3.next = 13;break;}_context3.next = 10;return ( */
+/*               selectUserFullName(params, res, listStaff));case 10:return _context3.abrupt('return', _context3.sent);case 13:_context3.next = 15;return ( */
+/*               fetch( */
+/*               'https://api.airtable.com/v0/appkhdzUXxa4FWcih/Order?' + ('api_key=' + */
+/*               AIRTABLE_API_KEY + '&') + 'filterByFormula=IS_SAME(CREATED_TIME(), TODAY(), \'day\')'). */
+/*  */
+/*               then(function (r) {return r.json();}));case 15:orderList = _context3.sent; */
+/*  */
+/*             console.log( */
+/*             'orderList', */
+/*             orderList.records.map(function (order) {return { */
+/*                 staffId: order.fields['Tên nhân viên'], */
+/*                 count: order.fields['Số phần ăn'] };})); */
+/*  */
+/*  */
+/*  */
+/*             return 'done'; */
+/* }; */
+/*  */
+
+app.get('/', (req, res) => {
+  res.send(`Root page 123`);
+});
+
+app.get('/test-post-to-slack', async (req, res) => {
+  res.send(await checkMenu());
+});
+
+app.get('/hello/:name', (req, res) => {
+  res.send(`Hello ${req.params.name}`);
+});
+
+// We name this function "route", which you can see is
+// still surfaced in the HTTP URLs below.
+exports.route = functions.https.onRequest(app);

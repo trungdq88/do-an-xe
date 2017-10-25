@@ -1,0 +1,27 @@
+[debug] [2017-10-25T03:09:36.676Z] ----------------------------------------------------------------------
+[debug] [2017-10-25T03:09:36.678Z] Command:       /Users/dinhquangtrung/.nvm/versions/node/v8.4.0/bin/node /Users/dinhquangtrung/.nvm/versions/node/v8.4.0/bin/firebase serve --only functions
+[debug] [2017-10-25T03:09:36.678Z] CLI Version:   3.13.1
+[debug] [2017-10-25T03:09:36.678Z] Platform:      darwin
+[debug] [2017-10-25T03:09:36.678Z] Node Version:  v8.4.0
+[debug] [2017-10-25T03:09:36.679Z] Time:          Wed Oct 25 2017 10:09:36 GMT+0700 (+07)
+[debug] [2017-10-25T03:09:36.679Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2017-10-25T03:09:36.690Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2017-10-25T03:09:36.690Z] > authorizing via signed-in user
+[debug] [2017-10-25T03:09:36.691Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/do-an-xe  
+ Wed Oct 25 2017 10:09:36 GMT+0700 (+07)
+[debug] [2017-10-25T03:09:37.782Z] <<< HTTP RESPONSE 200
+[debug] [2017-10-25T03:09:37.783Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/do-an-xe/tokens  
+ Wed Oct 25 2017 10:09:37 GMT+0700 (+07)
+[debug] [2017-10-25T03:09:38.699Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Serving from '/Users/dinhquangtrung/Documents/SSS/do-an-xe'...
+[info] 
+[info] i  functions: Preparing to emulate functions.
+[debug] [2017-10-25T03:09:38.964Z] >>> HTTP REQUEST GET https://appengine.googleapis.com/v1/apps/do-an-xe  
+ Wed Oct 25 2017 10:09:38 GMT+0700 (+07)
+[debug] [2017-10-25T03:09:38.965Z] >>> HTTP REQUEST GET https://apikeys.googleapis.com/v1/projects/do-an-xe/apiKeys  
+ Wed Oct 25 2017 10:09:38 GMT+0700 (+07)
+[debug] [2017-10-25T03:09:40.321Z] <<< HTTP RESPONSE 200
+[debug] [2017-10-25T03:09:40.349Z] <<< HTTP RESPONSE 200
+[info] ✔  functions: route: http://localhost:5000/do-an-xe/us-central1/route
