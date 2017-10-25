@@ -376,19 +376,21 @@ app.post('/order', function () {var _ref11 = (0, _asyncToGenerator3.default)( /*
 
 
             console.log('callback_id', params.callback_id);if (!(
-            params.callback_id.indexOf('order_food_') === 0)) {_context9.next = 13;break;}_context9.t0 =
-            res;_context9.next = 9;return orderFood(params);case 9:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);_context9.next = 19;break;case 13:if (!(
-            params.callback_id.indexOf('set_up_username_') === 0)) {_context9.next = 19;break;}_context9.t2 =
-            res;_context9.next = 17;return setUpUsernameAndOrder(params);case 17:_context9.t3 = _context9.sent;_context9.t2.send.call(_context9.t2, _context9.t3);case 19:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x18, _x19) {return _ref11.apply(this, arguments);};}());
+            params.callback_id.indexOf('order_food_') === 0)) {_context9.next = 10;break;}
+            orderFood(params);
+            res.send('');_context9.next = 16;break;case 10:if (!(
+            params.callback_id.indexOf('set_up_username_') === 0)) {_context9.next = 16;break;}_context9.t0 =
+            res;_context9.next = 14;return setUpUsernameAndOrder(params);case 14:_context9.t1 = _context9.sent;_context9.t0.send.call(_context9.t0, _context9.t1);case 16:case 'end':return _context9.stop();}}}, _callee9, undefined);}));return function (_x18, _x19) {return _ref11.apply(this, arguments);};}());
 
 
 
 app.post('/list', function () {var _ref12 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee10(req, res) {return _regenerator2.default.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:if (!(
             !req.body.token || req.body.token !== SLACK_TOKEN)) {_context10.next = 3;break;}
-            res.send('No.');return _context10.abrupt('return');case 3:_context10.t0 =
+            res.send('No.');return _context10.abrupt('return');case 3:
 
 
-            res;_context10.next = 6;return checkMenu(req.body);case 6:_context10.t1 = _context10.sent;_context10.t0.send.call(_context10.t0, _context10.t1);case 8:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x20, _x21) {return _ref12.apply(this, arguments);};}());
+            checkMenu(req.body);
+            res.send('Đang đăng tin');case 5:case 'end':return _context10.stop();}}}, _callee10, undefined);}));return function (_x20, _x21) {return _ref12.apply(this, arguments);};}());
 
 
 app.get('/hello', function () {var _ref13 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee11(req, res) {return _regenerator2.default.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:
