@@ -79,8 +79,9 @@ const postToSlack = async foods => {
         .concat([
           {
             text:
-              'Đặt giùm hoặc đặt nhiều phần, mọi người vào link này ' +
-              'nha: http://bit.ly/air-lounge-order-form :grin:',
+              'Chọn số phần bên trên để đặt cho mình. Để đặt giùm người khác,' +
+              ' mọi người vào link này nha:' +
+              ' http://bit.ly/air-lounge-order-form :grin:',
           },
         ]),
     }),
@@ -88,7 +89,29 @@ const postToSlack = async foods => {
   return 'Đã đăng menu lên channel :)';
 };
 
-const checkMenu = async () => {
+const checkMenu = async params => {
+  console.log('checkmenu', params);
+
+  const findUser = await new Promise((resolve, reject) =>
+    airTableApi('Staff')
+      .select({
+        filterByFormula: `{Slack User ID}='${params.user_id}'`,
+      })
+      .firstPage((err, records) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(records);
+      }),
+  );
+
+  if (!findUser.length || findUser[0].fields.Admin !== true) {
+    return 'Chỉ có admin dễ thương mới được xài lệnh này :)';
+  }
+
+  console.log('List menu by', findUser[0]);
+
   const todayFood = await new Promise((resolve, reject) =>
     airTableApi('Menu')
       .select({
@@ -148,12 +171,25 @@ const selectUserFullName = async (params, listStaff) => {
   return '';
 };
 
+const sendMessageToUser = async (slackUserId, channelId, msg) => {
+  const form = new FormData();
+  form.append('token', SLACK_APP_TOKEN);
+  form.append('channel', channelId);
+  form.append('text', msg);
+  form.append('user', slackUserId);
+  return await fetch('https://slack.com/api/chat.postEphemeral', {
+    method: 'post',
+    body: form,
+  }).then(r => r.json());
+};
+
 const createOrder = async (
   channelId,
   slackUserId,
   airTableStaffId,
   foodCount,
   foodId,
+  remaining,
 ) => {
   console.log('createOrder', {
     channelId,
@@ -161,9 +197,16 @@ const createOrder = async (
     airTableStaffId,
     foodCount,
     foodId,
+    remaining,
   });
+  const remainingAfterUse =
+    (remaining === undefined ? 20 : remaining) - Number(foodCount);
 
-  let msg = `:white_check_mark: Bạn đã đặt thành công \`${foodCount}\` món!`;
+  let msg =
+    `:white_check_mark: Bạn đã đặt thành công \`${foodCount}\` món!` +
+    (remainingAfterUse <= 0
+      ? ` Bạn đã hết coupon tháng này :wave:`
+      : ` Tháng này bạn còn \`${remainingAfterUse}\` coupon. :hugging_face:`);
 
   try {
     const createOrderResponse = await new Promise((resolve, reject) =>
@@ -187,15 +230,7 @@ const createOrder = async (
     msg = `:x: Có lỗi xảy ra, vui lòng thử lại. (${e})`;
   }
 
-  const form = new FormData();
-  form.append('token', SLACK_APP_TOKEN);
-  form.append('channel', channelId);
-  form.append('text', msg);
-  form.append('user', slackUserId);
-  const response = await fetch('https://slack.com/api/chat.postEphemeral', {
-    method: 'post',
-    body: form,
-  }).then(r => r.json());
+  const response = await sendMessageToUser(slackUserId, channelId, msg);
 
   console.log('Send success msg: ', response);
 
@@ -233,6 +268,7 @@ const setUpUsernameAndOrder = async params => {
   );
 
   console.log('params', params);
+  // Ignore the check remaining coupon step
   return await createOrder(
     params.channel.id,
     params.user.id,
@@ -273,8 +309,27 @@ const orderFood = async params => {
     staff => staff.fields['Slack User ID'] === user.id,
   )[0];
 
+  console.log('order by', airTableUser);
+
   if (!airTableUser) {
     return selectUserFullName(params, listStaff);
+  }
+
+  const remaining = Number(airTableUser.fields['Số coupon còn lại*']);
+  if (remaining <= 0) {
+    await sendMessageToUser(
+      user.id,
+      params.channel.id,
+      'Hết coupon tháng này mất rồi sao mà đặt được? :pensive:',
+    );
+    return '';
+  } else if (remaining < foodCount) {
+    await sendMessageToUser(
+      user.id,
+      params.channel.id,
+      `Tháng này bạn chỉ còn \`${remaining}\` coupon, không đủ để đặt \`${foodCount}\` phần :scream:`,
+    );
+    return '';
   }
 
   /* const orderList = await fetch( */
@@ -299,6 +354,7 @@ const orderFood = async params => {
     airTableUser.id,
     foodCount,
     foodId,
+    remaining,
   );
 };
 
@@ -331,7 +387,7 @@ app.post('/list', async (req, res) => {
     res.send('No.');
     return;
   }
-  res.send(await checkMenu());
+  res.send(await checkMenu(req.body));
 });
 
 app.get('/hello', async (req, res) => {
