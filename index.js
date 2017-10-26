@@ -560,13 +560,15 @@ app.get('/hello', async (req, res) => {
 });
 
 if (isDevelopment) {
-  app.listen(8010, function() {
-    console.log('Example app listening on port 8010.');
+  const port = process.env.PORT || 8010;
+  app.listen(port, function() {
+    console.log(`Example app listening on port ${port}.`);
   });
 }
-exports.doanxe = app;
 
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
   // application specific logging, throwing an error, or other logic here
 });
+
+exports.doanxe = app;
