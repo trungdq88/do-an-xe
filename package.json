@@ -1,8 +1,8 @@
 {
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -e js -x \"yarn start\"",
-    "start": "source .env && node index.js dev",
+    "dev": "nodemon -e js -x \"source .env && node index.js dev\"",
+    "start": "node index.js dev",
     "deploy": "source .env && now -e SLACK_TOKEN -e AIRTABLE_API_KEY -e SLACK_INCOMING_HOOK -e SLACK_APP_TOKEN --public"
   },
   "dependencies": {
