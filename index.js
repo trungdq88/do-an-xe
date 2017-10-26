@@ -5,9 +5,20 @@ const FormData = require('form-data');
 const Airtable = require('airtable');
 const bodyParser = require('body-parser');
 
+const SLACK_TOKEN =
+  process.env.SLACK_TOKEN || console.error('SLACK_TOKEN not found');
+const AIRTABLE_API_KEY =
+  process.env.AIRTABLE_API_KEY || console.error('AIRTABLE_API_KEY not found');
+const SLACK_INCOMING_HOOK =
+  process.env.SLACK_INCOMING_HOOK ||
+  console.error('SLACK_INCOMING_HOOK not found');
+const SLACK_APP_TOKEN =
+  process.env.SLACK_APP_TOKEN || console.error('SLACK_APP_TOKEN not found');
+
 const isDevelopment = process.argv[2] === 'dev';
 
 app.use(morgan('combined'));
+
 if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
 }
@@ -26,19 +37,14 @@ const fetchJson = (...args) =>
     return json;
   });
 
-const SLACK_TOKEN =
-  process.env.SLACK_TOKEN || console.error('SLACK_TOKEN not found');
-const AIRTABLE_API_KEY =
-  process.env.AIRTABLE_API_KEY || console.error('AIRTABLE_API_KEY not found');
-const SLACK_INCOMING_HOOK =
-  process.env.SLACK_INCOMING_HOOK ||
-  console.error('SLACK_INCOMING_HOOK not found');
-const SLACK_APP_TOKEN =
-  process.env.SLACK_APP_TOKEN || console.error('SLACK_APP_TOKEN not found');
-
 const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
   'appkhdzUXxa4FWcih',
 );
+
+const checkFormAvailable = async () => {
+  const response = await fetchLog('https://airtable.com/shrWEveNbdsQyNT8M');
+  return response.status === 200;
+};
 
 const postToSlack = async foods => {
   await fetchLog(SLACK_INCOMING_HOOK, {
@@ -492,6 +498,16 @@ app.post('/order', async (req, res) => {
 
   if (!params.token || params.token !== SLACK_TOKEN) {
     res.send('No.');
+    return;
+  }
+
+  if (!await checkFormAvailable()) {
+    await sendMessageToUser(
+      params.user.id,
+      params.channel.id,
+      ':x: Admin đã chốt order mất rồi, ko đặt được nữa :disappointed:',
+    );
+    res.send('');
     return;
   }
 
