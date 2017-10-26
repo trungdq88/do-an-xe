@@ -2,7 +2,7 @@
   "main": "index.js",
   "scripts": {
     "prepare": "babel ./*.es7 --presets latest --retain-lines -d ./",
-    "dev": "nodemon -e es7 -x \"yarn prepare && node index.js dev\"",
+    "dev": "nodemon -e js -x \"yarn start\"",
     "start": "source .env && node index.js dev"
   },
   "dependencies": {
