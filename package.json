@@ -3,7 +3,7 @@
   "scripts": {
     "prepare": "babel ./*.es7 --presets latest --retain-lines -d ./",
     "dev": "nodemon -e es7 -x \"yarn prepare && node index.js dev\"",
-    "start": "node index.js dev"
+    "start": "source .env && node index.js dev"
   },
   "dependencies": {
     "airtable": "^0.5.0",

@@ -27,11 +27,15 @@ const fetchJson = (...args) =>
     return json;
   });
 
-const SLACK_TOKEN = 'ZmAUnPLxNnfSdH0OlSp6wFnr';
-const AIRTABLE_API_KEY = 'keyr23yt6W4vwV4zc';
+const SLACK_TOKEN =
+  process.env.SLACK_TOKEN || console.error('SLACK_TOKEN not found');
+const AIRTABLE_API_KEY =
+  process.env.AIRTABLE_API_KEY || console.error('AIRTABLE_API_KEY not found');
 const SLACK_INCOMING_HOOK =
-  'https://hooks.slack.com/services/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';
-const SLACK_APP_TOKEN = 'xoxb-254761642838-Ta2VbGf2N3vUvGYNl4salNEy';
+  process.env.SLACK_INCOMING_HOOK ||
+  console.error('SLACK_INCOMING_HOOK not found');
+const SLACK_APP_TOKEN =
+  process.env.SLACK_APP_TOKEN || console.error('SLACK_APP_TOKEN not found');
 
 const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
   'appkhdzUXxa4FWcih',
