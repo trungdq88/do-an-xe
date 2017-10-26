@@ -560,7 +560,7 @@ app.get('/hello', async (req, res) => {
 });
 
 if (isDevelopment) {
-  const port = process.env.PORT || 8010;
+  const port = 8010;
   app.listen(port, function() {
     console.log(`Example app listening on port ${port}.`);
   });
