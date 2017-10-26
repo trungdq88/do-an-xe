@@ -6,6 +6,10 @@ const FormData = require('form-data');
 const Airtable = require('airtable');
 const bodyParser = require('body-parser');
 
+// Disable log to save money
+console.log = () => {};
+// app.use(morgan('combined'));
+
 const SLACK_TOKEN =
   process.env.SLACK_TOKEN || console.error('SLACK_TOKEN not found');
 const AIRTABLE_API_KEY =
@@ -17,8 +21,6 @@ const SLACK_APP_TOKEN =
   process.env.SLACK_APP_TOKEN || console.error('SLACK_APP_TOKEN not found');
 
 const isDevelopment = process.argv[2] === 'dev';
-
-app.use(morgan('combined'));
 
 if (isDevelopment) {
   app.use(bodyParser.urlencoded({ extended: false }));
