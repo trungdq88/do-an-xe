@@ -100,9 +100,8 @@ const postToSlack = async foods => {
         .concat([
           {
             text:
-              ':raising_hand: Chọn số phần bên trên để đặt cho mình.\n' +
-              ':man-woman-girl-boy: Để đặt giùm người khác,' +
-              ' mọi người vào link này nha:' +
+              ':raising_hand: Chọn số phần bên trên để đặt món.\n' +
+              ':memo: Link đặt món trên web:' +
               ' http://bit.ly/air-lounge-order-form',
           },
         ]),
@@ -352,7 +351,7 @@ const setUpUsernameAndOrder = async params => {
       remaining = Number(airTableUser.fields['Số coupon còn lại*']);
       username = airTableUser.fields['Họ tên'];
     } catch (e) {
-      await sendMessageToUser(userId, channelId, `:x: Lỗi hệ thống (${e}) `);
+      sendMessageToUser(userId, channelId, `:x: Lỗi hệ thống (${e}) `);
       return '';
     }
   }
@@ -370,7 +369,7 @@ const setUpUsernameAndOrder = async params => {
 
   console.log('setUpUsernameAndOrder', params);
   // Ignore the check remaining coupon step
-  return await createOrder(
+  createOrder(
     channelId,
     userId,
     airTableStaffId,
@@ -379,6 +378,7 @@ const setUpUsernameAndOrder = async params => {
     remaining,
     username,
   );
+  return '';
 };
 
 const checkRemainingCoupon = async (
