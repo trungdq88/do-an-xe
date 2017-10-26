@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 
 // Disable log to save money
 console.log = () => {};
-// app.use(morgan('combined'));
+app.use(morgan('combined'));
 
 const SLACK_TOKEN =
   process.env.SLACK_TOKEN || console.error('SLACK_TOKEN not found');
