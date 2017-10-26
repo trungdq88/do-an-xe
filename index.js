@@ -1,3 +1,4 @@
+const cache = require('memory-cache');
 const morgan = require('morgan');
 const fetch = require('node-fetch');
 const app = require('express')();
@@ -41,9 +42,26 @@ const airTableApi = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(
   'appkhdzUXxa4FWcih',
 );
 
+const withCache = async (cacheKey, cacheDurationInMillis, getPromise) => {
+  const existingCache = cache.get(cacheKey);
+  if (existingCache !== null) {
+    console.log('cache hit', cacheKey, existingCache);
+    return existingCache;
+  }
+
+  return getPromise().then(r => {
+    console.log('cache put', cacheKey, r);
+    cache.put(cacheKey, r, cacheDurationInMillis);
+    return r;
+  });
+};
+
 const checkFormAvailable = async () => {
-  const response = await fetchLog('https://airtable.com/shrWEveNbdsQyNT8M');
-  return response.status === 200;
+  // Cache for 1 minute
+  return withCache('checkFormAvailable', 60 * 1000, async () => {
+    const response = await fetchLog('https://airtable.com/shrWEveNbdsQyNT8M');
+    return response.status === 200;
+  });
 };
 
 const postToSlack = async foods => {
@@ -415,6 +433,17 @@ const checkRemainingCoupon = async (
   return true;
 };
 
+const getAllAirTableStaff = async () =>
+  new Promise((resolve, reject) =>
+    airTableApi('Staff').select().firstPage((err, records) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(records);
+    }),
+  );
+
 const orderFood = async params => {
   const user = params.user;
   const action = params.actions.length ? params.actions[0] : null;
@@ -426,15 +455,7 @@ const orderFood = async params => {
   try {
     // We have to get ALL staff, because if current user is not mapped, we need
     // the list to display to user and ask them to choose
-    const listStaff = await new Promise((resolve, reject) =>
-      airTableApi('Staff').select().firstPage((err, records) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(records);
-      }),
-    );
+    const listStaff = await getAllAirTableStaff();
 
     console.log('listStaff length', listStaff.length);
 

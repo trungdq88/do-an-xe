@@ -1,7 +1,6 @@
 {
   "main": "index.js",
   "scripts": {
-    "prepare": "babel ./*.es7 --presets latest --retain-lines -d ./",
     "dev": "nodemon -e js -x \"yarn start\"",
     "start": "source .env && node index.js dev"
   },
@@ -11,6 +10,7 @@
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "form-data": "^2.3.1",
+    "memory-cache": "^0.2.0",
     "morgan": "^1.9.0",
     "node-fetch": "^1.7.3"
   },
