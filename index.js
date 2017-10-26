@@ -3,7 +3,6 @@ const fetch = require('node-fetch');
 const app = require('express')();
 const FormData = require('form-data');
 const Airtable = require('airtable');
-
 const bodyParser = require('body-parser');
 
 const isDevelopment = process.argv[2] === 'dev';
@@ -113,32 +112,32 @@ const postToSlack = async foods => {
 const checkMenu = async params => {
   console.log('checkmenu', params);
 
-  const findUser = await new Promise((resolve, reject) =>
-    airTableApi('Staff')
-      .select({
-        filterByFormula: `{Slack User ID}='${params.user_id}'`,
-      })
-      .firstPage((err, records) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(records);
-      }),
-  );
-
-  if (!findUser.length || findUser[0].fields.Admin !== true) {
-    await sendMessageToUser(
-      params.user_id,
-      params.channel_id,
-      'Chỉ có admin dễ thương mới được xài lệnh này :)',
-    );
-    return;
-  }
-
-  console.log('List menu by', findUser[0]);
-
   try {
+    const findUser = await new Promise((resolve, reject) =>
+      airTableApi('Staff')
+        .select({
+          filterByFormula: `{Slack User ID}='${params.user_id}'`,
+        })
+        .firstPage((err, records) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(records);
+        }),
+    );
+
+    if (!findUser.length || findUser[0].fields.Admin !== true) {
+      await sendMessageToUser(
+        params.user_id,
+        params.channel_id,
+        'Chỉ có admin dễ thương mới được xài lệnh này :)',
+      );
+      return;
+    }
+
+    console.log('List menu by', findUser[0]);
+
     const todayFood = await new Promise((resolve, reject) =>
       airTableApi('Menu')
         .select({
@@ -154,15 +153,16 @@ const checkMenu = async params => {
     );
     return await postToSlack(todayFood);
   } catch (e) {
+    console.error(e);
     await sendMessageToUser(
       params.user_id,
       params.channel_id,
-      `Có lỗi xảy ra. ${e}`,
+      `Có lỗi xảy ra. (${e})`,
     );
   }
 };
 
-const selectUserFullName = async (params, listStaff) => {
+const selectUserFullName = async (params, listStaff, airTableStaffId) => {
   const action = params.actions.length ? params.actions[0] : null;
   const foodCount = action.selected_options[0].value;
   const foodId = params.callback_id.replace(/order_food_/, '');
@@ -179,7 +179,7 @@ const selectUserFullName = async (params, listStaff) => {
           label: 'Chọn tên của bạn',
           type: 'select',
           name: 'airtable_staff_id',
-          value: '',
+          value: airTableStaffId || '',
           options: listStaff.map(staff => ({
             label: staff.fields['Họ tên'],
             value: staff.id,
@@ -263,7 +263,7 @@ const createOrder = async (
     `:white_check_mark: \`${username ||
       'Bạn'}\` đã đặt thành công \`${foodCount}\` món!` +
     (remainingAfterUse <= 0
-      ? ` Bạn đã hết coupon tháng này :wave:`
+      ? ` Đã xài hết coupon tháng này :wave:`
       : ` Tháng này còn \`${remainingAfterUse}\` coupon. :hugging_face:`);
 
   try {
@@ -285,6 +285,7 @@ const createOrder = async (
     );
     console.log('createOrderResponse', createOrderResponse);
   } catch (e) {
+    console.error(e);
     msg = `:x: Có lỗi xảy ra, vui lòng thử lại. (${e})`;
   }
 
@@ -300,26 +301,39 @@ const setUpUsernameAndOrder = async params => {
   const channelId = params.channel.id;
   const airTableStaffId = params.submission.airtable_staff_id;
 
-  if (!params.submission.airtable_staff_id) {
-    return {
-      errors: [
-        {
-          name: 'airtable_staff_id',
-          error: 'Bạn cần phải chọn tên để đặt món!',
-        },
-      ],
-    };
-  }
+  try {
+    if (!airTableStaffId) {
+      return {
+        errors: [
+          {
+            name: 'airtable_staff_id',
+            error: 'Bạn cần phải chọn tên để đặt món!',
+          },
+        ],
+      };
+    }
+    if (!/^\d+$/.test(foodCount) || Number(foodCount) <= 0) {
+      return {
+        errors: [
+          {
+            name: 'food_count',
+            error: 'Số phần ăn không đúng',
+          },
+        ],
+      };
+    }
 
-  let remaining = 20;
-  let username = '';
-  if (params.submission.remember_staff_id === 'yes') {
+    let remaining = 20;
+    let username = '';
+    const updateFields = { 'Slack User ID': params.user.id };
+    if (params.submission.remember_staff_id === 'yes') {
+      updateFields['Remember'] = true;
+    }
+
     const airtableResponse = await new Promise((resolve, reject) =>
       airTableApi('Staff').update(
         params.submission.airtable_staff_id,
-        {
-          'Slack User ID': params.user.id,
-        },
+        updateFields,
         (err, record) => {
           if (err) {
             reject(err);
@@ -337,48 +351,35 @@ const setUpUsernameAndOrder = async params => {
     );
     remaining = Number(airtableResponse.fields['Số coupon còn lại*']);
     username = airtableResponse.fields['Họ tên'];
-  } else {
-    try {
-      const airTableUser = await new Promise((resolve, reject) =>
-        airTableApi('Staff').find(airTableStaffId, (err, records) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(records);
-        }),
-      );
-      remaining = Number(airTableUser.fields['Số coupon còn lại*']);
-      username = airTableUser.fields['Họ tên'];
-    } catch (e) {
-      sendMessageToUser(userId, channelId, `:x: Lỗi hệ thống (${e}) `);
-      return '';
+
+    const checkRemaining = await checkRemainingCoupon(
+      remaining,
+      foodCount,
+      userId,
+      channelId,
+      username,
+    );
+    if (checkRemaining !== true) {
+      return checkRemaining;
     }
-  }
 
-  const checkRemaining = await checkRemainingCoupon(
-    remaining,
-    foodCount,
-    userId,
-    channelId,
-    username,
-  );
-  if (checkRemaining !== true) {
-    return checkRemaining;
+    console.log('setUpUsernameAndOrder', params);
+    // Ignore the check remaining coupon step
+    createOrder(
+      channelId,
+      userId,
+      airTableStaffId,
+      foodCount,
+      foodId,
+      remaining,
+      username,
+    );
+    return '';
+  } catch (e) {
+    console.error(e);
+    sendMessageToUser(userId, channelId, `:x: Lỗi hệ thống (${e}) `);
+    return '';
   }
-
-  console.log('setUpUsernameAndOrder', params);
-  // Ignore the check remaining coupon step
-  createOrder(
-    channelId,
-    userId,
-    airTableStaffId,
-    foodCount,
-    foodId,
-    remaining,
-    username,
-  );
-  return '';
 };
 
 const checkRemainingCoupon = async (
@@ -416,56 +417,66 @@ const orderFood = async params => {
 
   console.log('action', action);
 
-  // We have to get ALL staff, because if current user is not mapped, we need
-  // the list to display to user and ask them to choose
-  const listStaff = await new Promise((resolve, reject) =>
-    airTableApi('Staff').select().firstPage((err, records) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(records);
-    }),
-  );
-
-  console.log('listStaff length', listStaff.length);
-
-  const airTableUser = listStaff.filter(
-    staff => staff.fields['Slack User ID'] === user.id,
-  )[0];
-
-  console.log('order by', user.id);
-
-  if (!airTableUser) {
-    console.log(
-      `AirTable staff mapping for ${user.id} not found, sending dialog.`,
+  try {
+    // We have to get ALL staff, because if current user is not mapped, we need
+    // the list to display to user and ask them to choose
+    const listStaff = await new Promise((resolve, reject) =>
+      airTableApi('Staff').select().firstPage((err, records) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(records);
+      }),
     );
-    return selectUserFullName(params, listStaff);
-  }
 
-  const remaining = Number(airTableUser.fields['Số coupon còn lại*']);
-  const username = airTableUser.fields['Họ tên'];
-  const checkRemaining = await checkRemainingCoupon(
-    remaining,
-    foodCount,
-    user.id,
-    params.channel.id,
-    username,
-  );
-  if (checkRemaining !== true) {
-    return checkRemaining;
-  }
+    console.log('listStaff length', listStaff.length);
 
-  console.log('params', params);
-  return await createOrder(
-    params.channel.id,
-    user.id,
-    airTableUser.id,
-    foodCount,
-    foodId,
-    remaining,
-    username,
-  );
+    const airTableUser = listStaff.filter(
+      staff => staff.fields['Slack User ID'] === user.id,
+    )[0];
+
+    console.log('order by', user.id);
+
+    if (!airTableUser || airTableUser.fields['Remember'] !== true) {
+      console.log(
+        `AirTable staff mapping for ${user.id} not found, sending dialog.`,
+      );
+      return selectUserFullName(
+        params,
+        listStaff,
+        airTableUser ? airTableUser.id : undefined,
+      );
+    }
+
+    const remaining = Number(airTableUser.fields['Số coupon còn lại*']);
+    const username = airTableUser.fields['Họ tên'];
+    const checkRemaining = await checkRemainingCoupon(
+      remaining,
+      foodCount,
+      user.id,
+      params.channel.id,
+      username,
+    );
+    if (checkRemaining !== true) {
+      return checkRemaining;
+    }
+
+    console.log('params', params);
+    return await createOrder(
+      params.channel.id,
+      user.id,
+      airTableUser.id,
+      foodCount,
+      foodId,
+      remaining,
+      username,
+    );
+  } catch (e) {
+    console.error(e);
+    sendMessageToUser(user.id, params.channel.id, `:x: Lỗi hệ thống (${e})`);
+    return '';
+  }
 };
 
 app.get('/', (req, res) => {
