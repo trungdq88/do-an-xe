@@ -2,6 +2,7 @@
 Slack App đặt đồ ăn xế ở Silicon Straits Saigon.
 
 ## Post menu to Slack
+![](https://user-images.githubusercontent.com/4214509/32046465-55c87326-ba6d-11e7-909c-19f129a7ee30.gif)
 
 ```
 title Send menu to Slack
@@ -14,6 +15,10 @@ do-an-xe->Slack: (Webhook) post to channel
 ![](https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgU2VuZCBtZW51IHRvIFNsYWNrCgpBZG1pbi0-AAkFOiBFbnRlciAnL2RvLWFuJyBjb21tYW5kCgAnBS0-ABEFLXhlOiAoV2ViaG9vaykgSFRUUCByZXF1ZXN0CgAZCC0-QWlyVGFibGU6IEdldCBmb28AcwYKABAIAEEMUmV0dXJuABoGADgKAIELBwBgCnBvc3QgdG8gY2hhbm5lbAoK&s=qsd)
 
 ## User create an order
+
+![gif1](https://user-images.githubusercontent.com/4214509/32046719-08309b38-ba6e-11e7-99ff-28d36b323973.gif)
+![gif9](https://user-images.githubusercontent.com/4214509/32046574-aaa695d0-ba6d-11e7-8dd1-a6587112a038.gif)
+![gif8](https://user-images.githubusercontent.com/4214509/32046571-a9492324-ba6d-11e7-960f-b29dd1821dc2.gif)
 
 ```
 title Create an order
