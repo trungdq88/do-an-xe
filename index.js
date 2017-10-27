@@ -58,12 +58,14 @@ const withCache = async (cacheKey, cacheDurationInMillis, getPromise) => {
   });
 };
 
-const checkFormAvailable = async () => {
+const checkFormAvailable = async ({ noCache = false } = {}) => {
   // Cache for 1 minute
-  return withCache('checkFormAvailable', 60 * 1000, async () => {
+  const get = async () => {
     const response = await fetchLog('https://airtable.com/shrWEveNbdsQyNT8M');
     return response.status === 200;
-  });
+  };
+  if (noCache) return get();
+  return withCache('checkFormAvailable', 60 * 1000, get);
 };
 
 const postToSlack = async foods => {
@@ -115,10 +117,17 @@ const postToSlack = async foods => {
                 18,
                 19,
                 20,
-              ].map(i => ({
-                text: 'Đặt ' + i + ' phần',
-                value: i,
-              })),
+              ]
+                .map(i => ({
+                  text: 'Đặt ' + i + ' phần',
+                  value: i,
+                }))
+                .concat([
+                  {
+                    text: 'Kiểm tra coupon (đặt 99 phần)',
+                    value: '99',
+                  },
+                ]),
             },
           ],
         }))
@@ -177,6 +186,14 @@ const checkMenu = async params => {
           resolve(records);
         }),
     );
+    if (todayFood.length === 0) {
+      await sendMessageToUser(
+        params.user_id,
+        params.channel_id,
+        ':exclamation: Chưa chọn món cho ngày hôm nay. Phải chọn món thì mới đăng menu được.',
+      );
+      return '';
+    }
     return await postToSlack(todayFood);
   } catch (e) {
     console.error(e);
@@ -551,6 +568,17 @@ app.post('/order', async (req, res) => {
 app.post('/list', async (req, res) => {
   if (!req.body.token || req.body.token !== SLACK_TOKEN) {
     res.send('No.');
+    return;
+  }
+
+  if (!await checkFormAvailable({ noCache: true })) {
+    await sendMessageToUser(
+      req.body.user_id,
+      req.body.channel_id,
+      ':exclamation: ORDER FORM chưa được mở. Cần phải mở ORDER FORM ' +
+        'cho mọi người đặt món trước mới đăng menu được!',
+    );
+    res.send('');
     return;
   }
   checkMenu(req.body);
